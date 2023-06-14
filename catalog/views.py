@@ -64,16 +64,22 @@ def complete_order(request):
     user_cart = models.UserCart.objects.filter(user_id=request.user.id)
     if request.method == 'POST':
         result_message = 'Новый заказ(из Сайта)\n\n'
-    # счетчик для подсчета итога для корзины
-    total_for_all_cart = 0
-    for cart in user_cart:
-        result_message +=f'Название товара: {cart.user_product}\n' \
-                         f'Количество: {cart.user_product_quantity}'
-    handlers.bot.send_message(-669247380, result_message)
-    user_cart.delete()
-    return redirect('/')
+        total = 0
+
+
+        # счетчик для подсчета итога для корзины
+
+        for cart in user_cart:
+            result_message +=f'Название товара: {cart.user_product}\n' \
+                             f'Количество: {cart.user_product_quantity}'
+            total += cart.user_product.product_price * cart.user_product.product_amount
+            result_message = f'\n\nИтог: {total}'
+
+        handlers.bot.send_message(5051050864, result_message)
+        user_cart.delete()
+        return redirect('/')
     return render(request, 'user_cart.html', {'user_cart': user_cart})
 def delete_from_user_cart(request, pk):
-    user_cart = models.UserCart.objects.filter(user_id=request.user.id, user_product=pk)
-    user_cart.delete()
+    product_to_delete = models.Product.objects.get(id=pk)
+    models.UserCart.objects.filter(user_id=request.user.id, user_product=product_to_delete).delete()
     return redirect('/cart')
